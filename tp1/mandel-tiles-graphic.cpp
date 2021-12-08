@@ -15,7 +15,7 @@ using namespace std;
 #define MAXX 640
 #define MAXY 480
 #define MAXITER 32768
-#define NUM_THREADS 4
+#define NUM_THREADS 8
 #define MAX_QUEUE (NUM_THREADS * 4)
 
 FILE* input; // descriptor for the list of tiles (cannot be stdin)
@@ -66,7 +66,7 @@ int input_params() {
 		exit(-1);
 	}
 	tasks_queue.push(p);
-	printf("Push address: %p, size: %ld\n", (void*)p, tasks_queue.size());
+	printf("> Push task, size: %ld\n", tasks_queue.size());
 	return 8;
 }
 
@@ -76,7 +76,7 @@ void empty_params() {
 	p->left = 0, p->low = 0, p->ires = 0, p->jres = 0;
 	p->xmin = 0, p->ymin = 0, p->xmax = 0, p->ymax = 0;
 	tasks_queue.push(p);
-	printf("Push empty address: %p, size: %ld\n", (void*)p, tasks_queue.size());
+	printf("> Push empty, size: %ld\n", tasks_queue.size());
 }
 
 void *read_thread(void *params) {
@@ -90,18 +90,19 @@ void *read_thread(void *params) {
 	while (1) {
 		pthread_mutex_lock(&mutex_queue);
 		while (tasks_queue.size() >= MAX_QUEUE) {
-			printf("Reader dormindo...\n");
+			printf("- Reader dormindo...\n");
 			pthread_cond_wait(&cond_not_full, &mutex_queue);
 		}
-		printf("Reader acordou\n");
+
+		printf("- Reader acordou\n");
 		while (tasks_queue.size() < MAX_QUEUE && n != EOF) {
 			n = input_params();
 		}
 		
 		if (n == EOF) empty_params();
 	
-		pthread_mutex_unlock(&mutex_queue);
 		pthread_cond_broadcast(&cond_full);
+		pthread_mutex_unlock(&mutex_queue);
 
 		if (n == EOF) break;
 	}
@@ -150,13 +151,14 @@ void *fractal_thread(void *params) {
 			pthread_mutex_unlock(&mutex_queue);
 			break;
 		}
+
 		tasks_queue.pop();
-		printf("Pop worker %ld, size: %ld\n", id, tasks_queue.size());
+		printf("< Pop worker %ld, size: %ld\n", id, tasks_queue.size());
 		clock_gettime(CLOCK_REALTIME, &start);
 
 		fractal_param_t* last_p = tasks_queue.back();
 		if (tasks_queue.size() <= NUM_THREADS && !end_of_work(last_p)) {
-			printf("Esvaziou... mandando sinal para Reader\n");
+			printf("- Esvaziou... mandando sinal para Reader\n");
 			pthread_cond_signal(&cond_not_full);
 		}
 		pthread_mutex_unlock(&mutex_queue);
@@ -209,7 +211,7 @@ void *fractal_thread(void *params) {
 		pthread_mutex_unlock(&mutex_computer);
 		free(p);
 	}
-	printf("Pop worker %ld leaving...\n", id);
+	printf("- Worker %ld leaving...\n", id);
 	pthread_exit(NULL);
 }
 
@@ -219,6 +221,7 @@ float task_standard_deviation(int sum, float mean, int data[]) {
 		printf("%d; ", data[i]);
 		sd += pow(data[i] - mean, 2);
 	}
+	printf("\n");
 	return sqrt(sd / NUM_THREADS);
 }
 
@@ -299,12 +302,13 @@ int main (int argc, char* argv[]) {
 		pthread_join(workers[t], NULL);
 	}
 	pthread_join(reader, NULL);
-
+	
 	pthread_cond_destroy(&cond_not_full);
 	pthread_cond_destroy(&cond_full);
 	pthread_mutex_destroy(&mutex_queue);
 	pthread_mutex_destroy(&mutex_computer);
-
+	tasks_queue.pop();
+	
 	compute_statistics();
 	return 0;
 }
