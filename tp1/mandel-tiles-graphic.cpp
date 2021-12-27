@@ -23,11 +23,10 @@ pthread_mutex_t mutex_queue, mutex_computer;
 pthread_cond_t cond_not_full, cond_full;
 
 //estatisticas
-int total_tasks = 0;
+int total_tasks = 0, find_empty_queue = 0;
 vector<int> tasks_pw;
 vector<double> time_pt;
 double total_time = 0;
-int find_empty_queue = 0;
 
 queue<struct fractal_param_t*> tasks_queue;
 
@@ -39,13 +38,6 @@ typedef struct fractal_param_t {
 	double xmax; double ymax;   // upper right corner in domain (x,y)
 } fractal_param_t;
 
-/****************************************************************
- * Nesta versao, o programa principal le diretamente da entrada
- * a descricao de cada quadrado que deve ser calculado; no EX1,
- * uma thread produtora deve ler essas descricoes sob demanda, 
- * para manter uma fila de trabalho abastecida para as threads
- * trabalhadoras.
- ****************************************************************/
 int input_params() { 
 	int n;
 
@@ -64,19 +56,18 @@ int input_params() {
 		exit(-1);
 	}
 	tasks_queue.push(p);
-	printf("> Push task, size: %ld\n", tasks_queue.size());
 	return 8;
 }
 
-//Preenche uma tarefa nula para indicar EOW
+//Insere uma tarefa nula para indicar EOW
 void empty_params() {
 	fractal_param_t* p = (fractal_param_t*)malloc(sizeof(fractal_param_t));
 	p->left = 0, p->low = 0, p->ires = 0, p->jres = 0;
 	p->xmin = 0, p->ymin = 0, p->xmax = 0, p->ymax = 0;
 	tasks_queue.push(p);
-	printf("> Push empty, size: %ld\n", tasks_queue.size());
 }
 
+//Thread do Reader, alimenta a fila e espera ficar vazia
 void *read_thread(void *params) {
 	int n = 0;
 	//Loop que apos preencher a fila com o tamanho maximo ou até EOF,
@@ -87,21 +78,21 @@ void *read_thread(void *params) {
 	//para informar EOW, finalizando sua execucao.
 	while (1) {
 		pthread_mutex_lock(&mutex_queue);
+		//Depois de preencher, aguarda algum Worker notificar
+		//que a fila esvaziou
 		while (tasks_queue.size() >= MAX_QUEUE) {
-			printf("- Reader dormindo...\n");
 			pthread_cond_wait(&cond_not_full, &mutex_queue);
 		}
-
-		printf("- Reader acordou\n");
+		//Preenche a fila até que atingir o maximo ou encontrar EOF
 		while (tasks_queue.size() < MAX_QUEUE && n != EOF) {
 			n = input_params();
 		}
-		
+		//Caso for EOF, coloca uma tarefa EOW na fila
 		if (n == EOF) empty_params();
 	
 		pthread_cond_broadcast(&cond_full);
 		pthread_mutex_unlock(&mutex_queue);
-
+		//Encerra a thread
 		if (n == EOF) break;
 	}
 	pthread_exit(NULL);
@@ -113,19 +104,13 @@ int end_of_work(fractal_param_t* p) {
 		   p->xmin == 0 && p->ymin == 0 && p->xmax == 0 && p->ymax == 0;
 }
 
-/****************************************************************
- * A funcao a seguir faz a geracao dos blocos de imagem dentro
- * da area que vai ser trabalhada pelo programa. Para a versao
- * paralela, nao importa quais as dimensoes totais da area, basta
- * manter um controle de quais blocos estao sendo processados
- * a cada momento, para manter as restricoes desritas no enunciado.
- ****************************************************************/
 // Function to draw mandelbrot set
+//Thread do Worker, consome as tarefas da fila até encontrar EOW
 void *fractal_thread(void *params) {
 	double dx, dy;
 	int i, j, k, color;
 	double x, y, u, v, u2, v2;
-	long id = (long) params;
+	long id = (long)params;
 	struct timespec start, end;
 
 	//Loop que inicia, após bloquear o mutex da fila, verificando se está vazia, que em caso positivo
@@ -137,26 +122,30 @@ void *fractal_thread(void *params) {
 	while (1) {
 
 		pthread_mutex_lock(&mutex_queue);
+		//Se estiver vazia, aguarda
 		while (tasks_queue.empty()) {
 			pthread_mutex_lock(&mutex_computer);
+			//incrementa contador de fila vazia
 			find_empty_queue++;
 			pthread_mutex_unlock(&mutex_computer);
 			pthread_cond_wait(&cond_full, &mutex_queue);
 		}
 
+		//Verifica se a proxima tarefa é EOW, caso seja verdade
+		//encerra sua thread. Nao remove o item da fila
 		fractal_param_t* p = tasks_queue.front();
 		if (end_of_work(p)) {
 			pthread_mutex_unlock(&mutex_queue);
 			break;
 		}
-
+		//Se nao for EOW, retira a tarefa
 		tasks_queue.pop();
-		printf("< Pop worker %ld, size: %ld\n", id, tasks_queue.size());
 		clock_gettime(CLOCK_REALTIME, &start);
 
+		//Caso a fila esvaziou e a ultima tarefa não for EOW
+		//entao avisa o Reader para preencher a fila
 		fractal_param_t* last_p = tasks_queue.back();
 		if (tasks_queue.size() <= NUM_THREADS && !end_of_work(last_p)) {
-			printf("- Esvaziou... mandando sinal para Reader\n");
 			pthread_cond_signal(&cond_not_full);
 		}
 		pthread_mutex_unlock(&mutex_queue);
@@ -203,23 +192,20 @@ void *fractal_thread(void *params) {
 		}
 		clock_gettime(CLOCK_REALTIME, &end);
 		pthread_mutex_lock(&mutex_computer);
-		total_tasks++;
-		tasks_pw[id]++;
-		time_pt.push_back(1.e+3 * (double)(end.tv_sec - start.tv_sec) + 1.e-6 * (double)(end.tv_nsec - start.tv_nsec));
+		total_tasks++; //incrementa numero de tarefas
+		tasks_pw[id]++; //incrementa o numero de tarefas da thread
+		time_pt.push_back(1.e+3 * (double)(end.tv_sec - start.tv_sec) + 1.e-6 * (double)(end.tv_nsec - start.tv_nsec)); //armazena o tempo gasto para realizar a tarefa
 		pthread_mutex_unlock(&mutex_computer);
 		free(p);
 	}
-	printf("- Worker %ld leaving...\n", id);
 	pthread_exit(NULL);
 }
 
 double task_standard_deviation(double mean, vector<int> data) {
 	double sd = 0;
 	for (int i = 0; i < data.size(); i++) {
-		printf("%d; ", data[i]);
 		sd += pow(data[i] - mean, 2);
 	}
-	printf("\n");
 	return sqrt(sd / NUM_THREADS);
 }
 
@@ -245,27 +231,15 @@ void compute_statistics() {
 	avg_time = total_time / time_pt.size();
 	sd_time = time_standard_deviation(avg_time, time_pt);
 
-	printf("Tarefas: total = %d;  média por trabalhador = %f(%f)\n", total_tasks, avg_tasks_pw, sd_tasks_pw);
-	printf("Tempo médio por tarefa: %.6f (%.6f) ms\n", avg_time, sd_time);
-	printf("Fila estava vazia: %d vezes\n", find_empty_queue);
+	// printf("Tarefas: total = %d;  média por trabalhador = %f(%f)\n", total_tasks, avg_tasks_pw, sd_tasks_pw);
+	// printf("Tempo médio por tarefa: %.6f (%.6f) ms\n", avg_time, sd_time);
+	// printf("Fila estava vazia: %d vezes\n", find_empty_queue);
+	printf("%.6f; %.6f; ", avg_time, sd_time);
 }
 
-/****************************************************************
- * Essa versao do programa, sequencial le a descricao de um bloco
- * de imagem do conjunto de mandelbrot por vez e faz a geracao
- * e exibicao do mesmo na janela grafica. Na versao paralela com 
- * pthreads, como indicado no enunciado, devem ser criados tres
- * tipos de threads: uma thread de entrada que le a descricao dos
- * blocos e alimenta uma fila para os trabalhadores, diversas
- * threads trabalhadoras que retiram um descritor de bloco da fila
- * e fazem o calculo da imagem e depositam um registro com os
- * dados sobre o processamento do bloco, como descrito no enunciado,
- * e uma thread final que recebe os registros sobre o processamento
- * e computa as estatisticas do sistema (que serao a unica saida
- * visivel do seu programa na versao que segue o enunciado.
- ****************************************************************/
-
 int main (int argc, char* argv[]) {
+	struct timespec start, end;
+	clock_gettime(CLOCK_REALTIME, &start);
 	int i, j, k, rc;
 	fractal_param_t p;
 	pthread_t reader, computer;
@@ -275,6 +249,8 @@ int main (int argc, char* argv[]) {
 		exit(-1);
 	} 
 
+	//Define o numero de threads, se nao for passado
+	//argumento, utiliza por padrao 4
 	if (argc == 3) {
 		NUM_THREADS = atoi(argv[2]);
 	} else {
@@ -314,8 +290,14 @@ int main (int argc, char* argv[]) {
 	pthread_cond_destroy(&cond_full);
 	pthread_mutex_destroy(&mutex_queue);
 	pthread_mutex_destroy(&mutex_computer);
+
+	//Remove o EOW, ultimo item da fila
 	tasks_queue.pop();
+
+	clock_gettime(CLOCK_REALTIME, &end);
+	double program_t = 1.e+3 * (double)(end.tv_sec - start.tv_sec) + 1.e-6 * (double)(end.tv_nsec - start.tv_nsec);
 	
 	compute_statistics();
+	printf("%f; \n", program_t);
 	return 0;
 }
