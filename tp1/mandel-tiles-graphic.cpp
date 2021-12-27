@@ -24,8 +24,8 @@ pthread_cond_t cond_not_full, cond_full;
 
 //estatisticas
 int total_tasks = 0, find_empty_queue = 0;
-vector<int> tasks_pw;
-vector<double> time_pt;
+vector<int> tasks_per_worker;
+vector<double> times_per_task;
 double total_time = 0;
 
 queue<struct fractal_param_t*> tasks_queue;
@@ -42,7 +42,8 @@ int input_params() {
 	int n;
 
 	fractal_param_t* p = (fractal_param_t*)malloc(sizeof(fractal_param_t));
-	n = fscanf(input,"%d %d %d %d", &(p->left), &(p->low), &(p->ires), &(p->jres));
+	n = fscanf(input,"%d %d %d %d", 
+		&(p->left), &(p->low), &(p->ires), &(p->jres));
 	if (n == EOF) return n;
 
 	if (n != 4) {
@@ -50,7 +51,7 @@ int input_params() {
 		exit(-1);
 	}
 	n = fscanf(input,"%lf %lf %lf %lf",
-		 &(p->xmin), &(p->ymin), &(p->xmax), &(p->ymax));
+		&(p->xmin), &(p->ymin), &(p->xmax), &(p->ymax));
 	if (n != 4) {
 		perror("scanf(xmin,ymin,xmax,ymax)");
 		exit(-1);
@@ -109,10 +110,9 @@ int end_of_work(fractal_param_t* p) {
 void *fractal_thread(void *params) {
 	double dx, dy;
 	int i, j, k, color;
-	double x, y, u, v, u2, v2;
+	double x, y, u, v, u2, v2, time_task;
 	long id = (long)params;
 	struct timespec start, end;
-
 	//Loop que inicia, após bloquear o mutex da fila, verificando se está vazia, que em caso positivo
 	//espera até que o Reader mande um broadcast para dizer que já possui itens disponiveis.
 	//Apos isso, o Worker retira uma tarefa da fila e checa se é EOW (atributos zerados, se for,
@@ -125,8 +125,7 @@ void *fractal_thread(void *params) {
 		//Se estiver vazia, aguarda
 		while (tasks_queue.empty()) {
 			pthread_mutex_lock(&mutex_computer);
-			//incrementa contador de fila vazia
-			find_empty_queue++;
+			find_empty_queue++; //incrementa contador de fila vazia
 			pthread_mutex_unlock(&mutex_computer);
 			pthread_cond_wait(&cond_full, &mutex_queue);
 		}
@@ -193,8 +192,10 @@ void *fractal_thread(void *params) {
 		clock_gettime(CLOCK_REALTIME, &end);
 		pthread_mutex_lock(&mutex_computer);
 		total_tasks++; //incrementa numero de tarefas
-		tasks_pw[id]++; //incrementa o numero de tarefas da thread
-		time_pt.push_back(1.e+3 * (double)(end.tv_sec - start.tv_sec) + 1.e-6 * (double)(end.tv_nsec - start.tv_nsec)); //armazena o tempo gasto para realizar a tarefa
+		tasks_per_worker[id]++; //incrementa o numero de tarefas da thread
+		time_task =  1.e+3 * (double)(end.tv_sec - start.tv_sec);
+		time_task += 1.e-6 * (double)(end.tv_nsec - start.tv_nsec);
+		times_per_task.push_back(time_task); //armazena o tempo gasto para realizar a tarefa
 		pthread_mutex_unlock(&mutex_computer);
 		free(p);
 	}
@@ -222,24 +223,21 @@ void compute_statistics() {
 	double avg_time = 0, sd_time = 0;
 
 	avg_tasks_pw = (double)total_tasks / NUM_THREADS;
-	sd_tasks_pw = task_standard_deviation(avg_tasks_pw, tasks_pw);
+	sd_tasks_pw = task_standard_deviation(avg_tasks_pw, tasks_per_worker);
 	
 	double total_time = 0;
-	for (int i = 0; i < time_pt.size(); i++) {
-		total_time += time_pt[i];
+	for (int i = 0; i < times_per_task.size(); i++) {
+		total_time += times_per_task[i];
 	}
-	avg_time = total_time / time_pt.size();
-	sd_time = time_standard_deviation(avg_time, time_pt);
+	avg_time = total_time / times_per_task.size();
+	sd_time = time_standard_deviation(avg_time, times_per_task);
 
-	// printf("Tarefas: total = %d;  média por trabalhador = %f(%f)\n", total_tasks, avg_tasks_pw, sd_tasks_pw);
-	// printf("Tempo médio por tarefa: %.6f (%.6f) ms\n", avg_time, sd_time);
-	// printf("Fila estava vazia: %d vezes\n", find_empty_queue);
-	printf("%.6f; %.6f; ", avg_time, sd_time);
+	printf("Tarefas: total = %d;  média por trabalhador = %f(%f)\n", total_tasks, avg_tasks_pw, sd_tasks_pw);
+	printf("Tempo médio por tarefa: %.6f (%.6f) ms\n", avg_time, sd_time);
+	printf("Fila estava vazia: %d vezes\n", find_empty_queue);
 }
 
 int main (int argc, char* argv[]) {
-	struct timespec start, end;
-	clock_gettime(CLOCK_REALTIME, &start);
 	int i, j, k, rc;
 	fractal_param_t p;
 	pthread_t reader, computer;
@@ -263,9 +261,11 @@ int main (int argc, char* argv[]) {
 		perror("fdopen");
 		exit(-1);
 	}
-	
+
 	pthread_t workers[NUM_THREADS];
-	tasks_pw.assign(NUM_THREADS, 0);
+	
+	//Preenche as primeiras NUM_THREADS posicoes do vector com 0
+	tasks_per_worker.assign(NUM_THREADS, 0);
 
 	pthread_mutex_init(&mutex_queue, NULL);
 	pthread_mutex_init(&mutex_computer, NULL);
@@ -291,13 +291,9 @@ int main (int argc, char* argv[]) {
 	pthread_mutex_destroy(&mutex_queue);
 	pthread_mutex_destroy(&mutex_computer);
 
-	//Remove o EOW, ultimo item da fila
-	tasks_queue.pop();
+	tasks_queue.pop(); //Remove o EOW, ultimo item da fila
 
-	clock_gettime(CLOCK_REALTIME, &end);
-	double program_t = 1.e+3 * (double)(end.tv_sec - start.tv_sec) + 1.e-6 * (double)(end.tv_nsec - start.tv_nsec);
-	
 	compute_statistics();
-	printf("%f; \n", program_t);
+
 	return 0;
 }
