@@ -15,18 +15,16 @@ using namespace std;
 #define MAXX 640
 #define MAXY 480
 #define MAXITER 32768
-#define NUM_THREADS 8
-#define MAX_QUEUE (NUM_THREADS * 4)
 
+int NUM_THREADS, MAX_QUEUE;
 FILE* input; // descriptor for the list of tiles (cannot be stdin)
 int color_pick = 5; // decide how to choose the color palette
-pthread_mutex_t mutex_queue;
-pthread_mutex_t mutex_computer;
+pthread_mutex_t mutex_queue, mutex_computer;
 pthread_cond_t cond_not_full, cond_full;
 
 //estatisticas
 int total_tasks = 0;
-int tasks_pw[NUM_THREADS];
+vector<int> tasks_pw;
 vector<double> time_pt;
 double total_time = 0;
 int find_empty_queue = 0;
@@ -215,9 +213,9 @@ void *fractal_thread(void *params) {
 	pthread_exit(NULL);
 }
 
-float task_standard_deviation(int sum, float mean, int data[]) {
-	float sd = 0;
-	for (int i = 0; i < NUM_THREADS; i++) {
+double task_standard_deviation(double mean, vector<int> data) {
+	double sd = 0;
+	for (int i = 0; i < data.size(); i++) {
 		printf("%d; ", data[i]);
 		sd += pow(data[i] - mean, 2);
 	}
@@ -225,7 +223,7 @@ float task_standard_deviation(int sum, float mean, int data[]) {
 	return sqrt(sd / NUM_THREADS);
 }
 
-double time_standard_deviation(double sum, double mean, vector<double> data) {
+double time_standard_deviation(double mean, vector<double> data) {
 	double sd = 0;
 	for (int i = 0; i < data.size(); i++) {
 		sd += pow(data[i] - mean, 2);
@@ -234,18 +232,18 @@ double time_standard_deviation(double sum, double mean, vector<double> data) {
 }
 
 void compute_statistics() {
-	float avg_tasks_pw, sd_tasks_pw;
+	double avg_tasks_pw = 0, sd_tasks_pw = 0;
 	double avg_time = 0, sd_time = 0;
 
-	avg_tasks_pw = (float)total_tasks / NUM_THREADS;
-	sd_tasks_pw = task_standard_deviation(total_tasks, avg_tasks_pw, tasks_pw);
+	avg_tasks_pw = (double)total_tasks / NUM_THREADS;
+	sd_tasks_pw = task_standard_deviation(avg_tasks_pw, tasks_pw);
 	
 	double total_time = 0;
 	for (int i = 0; i < time_pt.size(); i++) {
 		total_time += time_pt[i];
 	}
 	avg_time = total_time / time_pt.size();
-	sd_time = time_standard_deviation(total_time, avg_time, time_pt);
+	sd_time = time_standard_deviation(avg_time, time_pt);
 
 	printf("Tarefas: total = %d;  média por trabalhador = %f(%f)\n", total_tasks, avg_tasks_pw, sd_tasks_pw);
 	printf("Tempo médio por tarefa: %.6f (%.6f) ms\n", avg_time, sd_time);
@@ -270,23 +268,31 @@ void compute_statistics() {
 int main (int argc, char* argv[]) {
 	int i, j, k, rc;
 	fractal_param_t p;
-	pthread_t workers[NUM_THREADS];
-	pthread_t reader;
-	pthread_t computer;
+	pthread_t reader, computer;
 
 	if ((argc != 2) && (argc != 3)) {
 		fprintf(stderr,"usage %s filename [color_pick]\n", argv[0] );
 		exit(-1);
 	} 
+
 	if (argc == 3) {
-		color_pick = atoi(argv[2]);
-	} 
+		NUM_THREADS = atoi(argv[2]);
+	} else {
+		NUM_THREADS = 4;
+	}
+
+	MAX_QUEUE = NUM_THREADS * 4;
+
 	if ((input = fopen(argv[1],"r")) == NULL) {
 		perror("fdopen");
 		exit(-1);
 	}
 	
+	pthread_t workers[NUM_THREADS];
+	tasks_pw.assign(NUM_THREADS, 0);
+
 	pthread_mutex_init(&mutex_queue, NULL);
+	pthread_mutex_init(&mutex_computer, NULL);
 	pthread_cond_init(&cond_not_full, NULL);
 	pthread_cond_init(&cond_full, NULL);
 
@@ -301,6 +307,7 @@ int main (int argc, char* argv[]) {
 	for(long t = 0; t < NUM_THREADS; t++) {
 		pthread_join(workers[t], NULL);
 	}
+
 	pthread_join(reader, NULL);
 	
 	pthread_cond_destroy(&cond_not_full);
