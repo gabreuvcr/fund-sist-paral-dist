@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package procedures;
+
+service DictionaryStorage {
+    rpc insert (InsertRequest) returns (IntReply) {};
+    rpc query (QueryRequest) returns (StringReply) {};
+    rpc active (ActiveRequest) returns (IntReply) {};
+    rpc end (EmptyRequest) returns (IntReply) {};
+}
+
+message InsertRequest {
+    int32 key = 1;
+    string value = 2;
+}
+
+message QueryRequest {
+    int32 key = 1;
+}
+
+message EmptyRequest {}
+
+message ActiveRequest {
+    string service = 1;
+}
+
+message IntReply {
+    int32 retval = 1;
+}
+
+message StringReply {
+    string retval = 1;
+}
