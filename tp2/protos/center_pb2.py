@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x13protos/center.proto\x12\x06\x63\x65nter\"0\n\x0fRegisterRequest\x12\x0f\n\x07service\x18\x01 \x01(\t\x12\x0c\n\x04keys\x18\x02 \x03(\x05\"\x1d\n\x0eMappingRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\"\x0e\n\x0c\x45mptyRequest\"\x1a\n\x08IntReply\x12\x0e\n\x06retval\x18\x01 \x01(\x05\"\x1d\n\x0bStringReply\x12\x0e\n\x06retval\x18\x01 \x01(\t2\xb2\x01\n\x0c\x43\x65nterServer\x12\x37\n\x08register\x12\x17.center.RegisterRequest\x1a\x10.center.IntReply\"\x00\x12\x38\n\x07mapping\x12\x16.center.MappingRequest\x1a\x13.center.StringReply\"\x00\x12/\n\x03\x65nd\x12\x14.center.EmptyRequest\x1a\x10.center.IntReply\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x13protos/center.proto\x12\x06\x63\x65nter\"3\n\x0fRegisterRequest\x12\x12\n\nservice_id\x18\x01 \x01(\t\x12\x0c\n\x04keys\x18\x02 \x03(\x05\"\x1d\n\x0eMappingRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\"\x0e\n\x0c\x45mptyRequest\"\x1a\n\x08IntReply\x12\x0e\n\x06retval\x18\x01 \x01(\x05\"\x1d\n\x0bStringReply\x12\x0e\n\x06retval\x18\x01 \x01(\t2\xb2\x01\n\x0c\x43\x65nterServer\x12\x37\n\x08register\x12\x17.center.RegisterRequest\x1a\x10.center.IntReply\"\x00\x12\x38\n\x07mapping\x12\x16.center.MappingRequest\x1a\x13.center.StringReply\"\x00\x12/\n\x03\x65nd\x12\x14.center.EmptyRequest\x1a\x10.center.IntReply\"\x00\x62\x06proto3'
 )
 
 
@@ -34,7 +34,7 @@ _REGISTERREQUEST = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='service', full_name='center.RegisterRequest.service', index=0,
+      name='service_id', full_name='center.RegisterRequest.service_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -60,7 +60,7 @@ _REGISTERREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=31,
-  serialized_end=79,
+  serialized_end=82,
 )
 
 
@@ -91,8 +91,8 @@ _MAPPINGREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=81,
-  serialized_end=110,
+  serialized_start=84,
+  serialized_end=113,
 )
 
 
@@ -116,8 +116,8 @@ _EMPTYREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=112,
-  serialized_end=126,
+  serialized_start=115,
+  serialized_end=129,
 )
 
 
@@ -148,8 +148,8 @@ _INTREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=128,
-  serialized_end=154,
+  serialized_start=131,
+  serialized_end=157,
 )
 
 
@@ -180,8 +180,8 @@ _STRINGREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=156,
-  serialized_end=185,
+  serialized_start=159,
+  serialized_end=188,
 )
 
 DESCRIPTOR.message_types_by_name['RegisterRequest'] = _REGISTERREQUEST
@@ -235,8 +235,8 @@ _CENTERSERVER = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=188,
-  serialized_end=366,
+  serialized_start=191,
+  serialized_end=369,
   methods=[
   _descriptor.MethodDescriptor(
     name='register',

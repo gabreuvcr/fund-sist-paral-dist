@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11protos/peer.proto\x12\x04peer\"+\n\rInsertRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\t\"\x1b\n\x0cQueryRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\"\x0e\n\x0c\x45mptyRequest\" \n\rActiveRequest\x12\x0f\n\x07service\x18\x01 \x01(\t\"\x1a\n\x08IntReply\x12\x0e\n\x06retval\x18\x01 \x01(\x05\"\x1d\n\x0bStringReply\x12\x0e\n\x06retval\x18\x01 \x01(\t2\xcd\x01\n\nPeerServer\x12/\n\x06insert\x12\x13.peer.InsertRequest\x1a\x0e.peer.IntReply\"\x00\x12\x30\n\x05query\x12\x12.peer.QueryRequest\x1a\x11.peer.StringReply\"\x00\x12/\n\x06\x61\x63tive\x12\x13.peer.ActiveRequest\x1a\x0e.peer.IntReply\"\x00\x12+\n\x03\x65nd\x12\x12.peer.EmptyRequest\x1a\x0e.peer.IntReply\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x11protos/peer.proto\x12\x04peer\"+\n\rInsertRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\x12\r\n\x05value\x18\x02 \x01(\t\"\x1b\n\x0cQueryRequest\x12\x0b\n\x03key\x18\x01 \x01(\x05\"\x0e\n\x0c\x45mptyRequest\"#\n\rActiveRequest\x12\x12\n\nservice_id\x18\x01 \x01(\t\"\x1a\n\x08IntReply\x12\x0e\n\x06retval\x18\x01 \x01(\x05\"\x1d\n\x0bStringReply\x12\x0e\n\x06retval\x18\x01 \x01(\t2\xcd\x01\n\nPeerServer\x12/\n\x06insert\x12\x13.peer.InsertRequest\x1a\x0e.peer.IntReply\"\x00\x12\x30\n\x05query\x12\x12.peer.QueryRequest\x1a\x11.peer.StringReply\"\x00\x12/\n\x06\x61\x63tive\x12\x13.peer.ActiveRequest\x1a\x0e.peer.IntReply\"\x00\x12+\n\x03\x65nd\x12\x12.peer.EmptyRequest\x1a\x0e.peer.IntReply\"\x00\x62\x06proto3'
 )
 
 
@@ -130,7 +130,7 @@ _ACTIVEREQUEST = _descriptor.Descriptor(
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='service', full_name='peer.ActiveRequest.service', index=0,
+      name='service_id', full_name='peer.ActiveRequest.service_id', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -149,7 +149,7 @@ _ACTIVEREQUEST = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=117,
-  serialized_end=149,
+  serialized_end=152,
 )
 
 
@@ -180,8 +180,8 @@ _INTREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=151,
-  serialized_end=177,
+  serialized_start=154,
+  serialized_end=180,
 )
 
 
@@ -212,8 +212,8 @@ _STRINGREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=179,
-  serialized_end=208,
+  serialized_start=182,
+  serialized_end=211,
 )
 
 DESCRIPTOR.message_types_by_name['InsertRequest'] = _INSERTREQUEST
@@ -275,8 +275,8 @@ _PEERSERVER = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=211,
-  serialized_end=416,
+  serialized_start=214,
+  serialized_end=419,
   methods=[
   _descriptor.MethodDescriptor(
     name='insert',

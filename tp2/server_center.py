@@ -15,7 +15,7 @@ class CenterServer(center_pb2_grpc.CenterServerServicer):
 
     def register(self, request, context):
         for key in request.keys:
-            self.dictionary[key] = request.service
+            self.dictionary[key] = request.service_id
         return center_pb2.IntReply(retval = len(request.keys))
 
     def mapping(self, request, context):
@@ -29,10 +29,7 @@ class CenterServer(center_pb2_grpc.CenterServerServicer):
 
 
 def serve():
-    addr = socket.gethostbyname(socket.getfqdn())
-    port = ''
-
-    if len(argv) >= 2: port = argv[1] 
+    service_id = socket.gethostbyname(socket.getfqdn()) + ':' + argv[1]
 
     server = grpc.server(futures.ThreadPoolExecutor())
 
@@ -40,7 +37,7 @@ def serve():
 
     center_pb2_grpc.add_CenterServerServicer_to_server(CenterServer(stop_event), server)
 
-    server.add_insecure_port(f"{addr}:{port}")
+    server.add_insecure_port(service_id)
 
     server.start()
     stop_event.wait()

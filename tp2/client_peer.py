@@ -5,44 +5,40 @@ import grpc
 from protos import peer_pb2, peer_pb2_grpc
 
 def run():
-    host = ''
-    if len(argv) == 2:
-        host = argv[1]
-    else:
-        exit()
+    service_id = argv[1]
 
-    channel = grpc.insecure_channel(host)
+    channel = grpc.insecure_channel(service_id)
 
     stub = peer_pb2_grpc.PeerServerStub(channel)
 
     while True:
-        command = input()
+        client_input = input()
 
-        if not command:
+        if not client_input:
             break
 
-        if command.startswith('I'):
-            if len(command.split(',')) != 3: continue
+        if client_input.startswith('I'):
+            if len(client_input.split(',')) != 3: continue
 
-            _, key, value = command.split(',')
+            command, key, value = client_input.split(',')
             response = stub.insert(peer_pb2.InsertRequest(key = int(key), value = value))
             print(response.retval)
 
-        elif command.startswith('C'):
-            if len(command.split(',')) != 2: continue
+        elif client_input.startswith('C'):
+            if len(client_input.split(',')) != 2: continue
             
-            _, key = command.split(',')
+            command, key = client_input.split(',')
             response = stub.query(peer_pb2.QueryRequest(key = int(key)))
             print(response.retval)
 
-        elif command.startswith('A'):
-            if len(command.split(',')) != 2: continue
+        elif client_input.startswith('A'):
+            if len(client_input.split(',')) != 2: continue
             
-            _, service = command.split(',')
-            response = stub.active(peer_pb2.ActiveRequest(service = service))
+            command, center_service_id = client_input.split(',')
+            response = stub.active(peer_pb2.ActiveRequest(service_id = center_service_id))
             print(response.retval)
 
-        elif command.startswith('T'):            
+        elif client_input.startswith('T'):            
             response = stub.end(peer_pb2.EmptyRequest())
             print(response.retval)
             break
@@ -53,6 +49,7 @@ def run():
 if __name__ == '__main__':
     try:
         run()
+    #Servidor foi finalizado ou input do client foi um EOF
     except (grpc._channel._InactiveRpcError, EOFError):
         exit()
     except Exception as e:
