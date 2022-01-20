@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package procedures;
+package peer;
 
-service DictionaryStorage {
+service PeerServer {
     rpc insert (InsertRequest) returns (IntReply) {};
     rpc query (QueryRequest) returns (StringReply) {};
     rpc active (ActiveRequest) returns (IntReply) {};
@@ -18,7 +18,8 @@ message QueryRequest {
     int32 key = 1;
 }
 
-message EmptyRequest {}
+message EmptyRequest {
+}
 
 message ActiveRequest {
     string service = 1;

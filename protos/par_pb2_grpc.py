@@ -2,10 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import procedures_pb2 as procedures__pb2
+from protos import par_pb2 as protos_dot_par__pb2
 
 
-class DictionaryStorageStub(object):
+class DictionaryKeyValueStub(object):
     """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
@@ -15,28 +15,28 @@ class DictionaryStorageStub(object):
             channel: A grpc.Channel.
         """
         self.insert = channel.unary_unary(
-                '/procedures.DictionaryStorage/insert',
-                request_serializer=procedures__pb2.InsertRequest.SerializeToString,
-                response_deserializer=procedures__pb2.IntReply.FromString,
+                '/par.DictionaryKeyValue/insert',
+                request_serializer=protos_dot_par__pb2.InsertRequest.SerializeToString,
+                response_deserializer=protos_dot_par__pb2.IntReply.FromString,
                 )
         self.query = channel.unary_unary(
-                '/procedures.DictionaryStorage/query',
-                request_serializer=procedures__pb2.QueryRequest.SerializeToString,
-                response_deserializer=procedures__pb2.StringReply.FromString,
+                '/par.DictionaryKeyValue/query',
+                request_serializer=protos_dot_par__pb2.QueryRequest.SerializeToString,
+                response_deserializer=protos_dot_par__pb2.StringReply.FromString,
                 )
         self.active = channel.unary_unary(
-                '/procedures.DictionaryStorage/active',
-                request_serializer=procedures__pb2.ActiveRequest.SerializeToString,
-                response_deserializer=procedures__pb2.IntReply.FromString,
+                '/par.DictionaryKeyValue/active',
+                request_serializer=protos_dot_par__pb2.ActiveRequest.SerializeToString,
+                response_deserializer=protos_dot_par__pb2.IntReply.FromString,
                 )
         self.end = channel.unary_unary(
-                '/procedures.DictionaryStorage/end',
-                request_serializer=procedures__pb2.EmptyRequest.SerializeToString,
-                response_deserializer=procedures__pb2.IntReply.FromString,
+                '/par.DictionaryKeyValue/end',
+                request_serializer=protos_dot_par__pb2.EmptyRequest.SerializeToString,
+                response_deserializer=protos_dot_par__pb2.IntReply.FromString,
                 )
 
 
-class DictionaryStorageServicer(object):
+class DictionaryKeyValueServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def insert(self, request, context):
@@ -64,36 +64,36 @@ class DictionaryStorageServicer(object):
         raise NotImplementedError('Method not implemented!')
 
 
-def add_DictionaryStorageServicer_to_server(servicer, server):
+def add_DictionaryKeyValueServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'insert': grpc.unary_unary_rpc_method_handler(
                     servicer.insert,
-                    request_deserializer=procedures__pb2.InsertRequest.FromString,
-                    response_serializer=procedures__pb2.IntReply.SerializeToString,
+                    request_deserializer=protos_dot_par__pb2.InsertRequest.FromString,
+                    response_serializer=protos_dot_par__pb2.IntReply.SerializeToString,
             ),
             'query': grpc.unary_unary_rpc_method_handler(
                     servicer.query,
-                    request_deserializer=procedures__pb2.QueryRequest.FromString,
-                    response_serializer=procedures__pb2.StringReply.SerializeToString,
+                    request_deserializer=protos_dot_par__pb2.QueryRequest.FromString,
+                    response_serializer=protos_dot_par__pb2.StringReply.SerializeToString,
             ),
             'active': grpc.unary_unary_rpc_method_handler(
                     servicer.active,
-                    request_deserializer=procedures__pb2.ActiveRequest.FromString,
-                    response_serializer=procedures__pb2.IntReply.SerializeToString,
+                    request_deserializer=protos_dot_par__pb2.ActiveRequest.FromString,
+                    response_serializer=protos_dot_par__pb2.IntReply.SerializeToString,
             ),
             'end': grpc.unary_unary_rpc_method_handler(
                     servicer.end,
-                    request_deserializer=procedures__pb2.EmptyRequest.FromString,
-                    response_serializer=procedures__pb2.IntReply.SerializeToString,
+                    request_deserializer=protos_dot_par__pb2.EmptyRequest.FromString,
+                    response_serializer=protos_dot_par__pb2.IntReply.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'procedures.DictionaryStorage', rpc_method_handlers)
+            'par.DictionaryKeyValue', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
  # This class is part of an EXPERIMENTAL API.
-class DictionaryStorage(object):
+class DictionaryKeyValue(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
@@ -107,9 +107,9 @@ class DictionaryStorage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/procedures.DictionaryStorage/insert',
-            procedures__pb2.InsertRequest.SerializeToString,
-            procedures__pb2.IntReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/par.DictionaryKeyValue/insert',
+            protos_dot_par__pb2.InsertRequest.SerializeToString,
+            protos_dot_par__pb2.IntReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -124,9 +124,9 @@ class DictionaryStorage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/procedures.DictionaryStorage/query',
-            procedures__pb2.QueryRequest.SerializeToString,
-            procedures__pb2.StringReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/par.DictionaryKeyValue/query',
+            protos_dot_par__pb2.QueryRequest.SerializeToString,
+            protos_dot_par__pb2.StringReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -141,9 +141,9 @@ class DictionaryStorage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/procedures.DictionaryStorage/active',
-            procedures__pb2.ActiveRequest.SerializeToString,
-            procedures__pb2.IntReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/par.DictionaryKeyValue/active',
+            protos_dot_par__pb2.ActiveRequest.SerializeToString,
+            protos_dot_par__pb2.IntReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -158,8 +158,8 @@ class DictionaryStorage(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/procedures.DictionaryStorage/end',
-            procedures__pb2.EmptyRequest.SerializeToString,
-            procedures__pb2.IntReply.FromString,
+        return grpc.experimental.unary_unary(request, target, '/par.DictionaryKeyValue/end',
+            protos_dot_par__pb2.EmptyRequest.SerializeToString,
+            protos_dot_par__pb2.IntReply.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

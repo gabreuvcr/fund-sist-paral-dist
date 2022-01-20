@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package center;
+
+service CenterServer {
+    rpc register (RegisterRequest) returns (IntReply) {};
+    rpc mapping (MappingRequest) returns (StringReply) {};
+    rpc end (EmptyRequest) returns (IntReply) {};
+}
+
+message RegisterRequest {
+    string service = 1;
+    repeated int32 keys = 2;
+}
+
+message MappingRequest {
+    int32 key = 1;
+}
+
+message EmptyRequest {
+}
+
+message IntReply {
+    int32 retval = 1;
+}
+
+message StringReply {
+    string retval = 1;
+}

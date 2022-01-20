@@ -2,7 +2,7 @@ from sys import argv
 
 import grpc
 
-import procedures_pb2, procedures_pb2_grpc
+from protos import peer_pb2, peer_pb2_grpc
 
 def run():
     host = ''
@@ -13,7 +13,7 @@ def run():
 
     channel = grpc.insecure_channel(host)
 
-    stub = procedures_pb2_grpc.DictionaryStorageStub(channel)
+    stub = peer_pb2_grpc.PeerServerStub(channel)
 
     while True:
         command = input()
@@ -25,25 +25,25 @@ def run():
             if len(command.split(',')) != 3: continue
 
             _, key, value = command.split(',')
-            response = stub.insert(procedures_pb2.InsertRequest(key = int(key), value = value))
+            response = stub.insert(peer_pb2.InsertRequest(key = int(key), value = value))
             print(response.retval)
 
         elif command.startswith('C'):
             if len(command.split(',')) != 2: continue
             
             _, key = command.split(',')
-            response = stub.query(procedures_pb2.QueryRequest(key = int(key)))
+            response = stub.query(peer_pb2.QueryRequest(key = int(key)))
             print(response.retval)
 
         elif command.startswith('A'):
             if len(command.split(',')) != 2: continue
             
             _, service = command.split(',')
-            response = stub.active(procedures_pb2.ActiveRequest(service = service))
+            response = stub.active(peer_pb2.ActiveRequest(service = service))
             print(response.retval)
 
         elif command.startswith('T'):            
-            response = stub.end(procedures_pb2.EmptyRequest())
+            response = stub.end(peer_pb2.EmptyRequest())
             print(response.retval)
             break
 
@@ -53,7 +53,7 @@ def run():
 if __name__ == '__main__':
     try:
         run()
-    except grpc._channel._InactiveRpcError:
+    except (grpc._channel._InactiveRpcError, EOFError):
         exit()
     except Exception as e:
         print(e.with_traceback())
