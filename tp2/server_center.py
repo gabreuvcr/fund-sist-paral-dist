@@ -41,7 +41,7 @@ class CenterServer(center_pb2_grpc.CenterServerServicer):
 
 def serve():
     #string identificador de serviço
-    service_id = socket.gethostbyname(socket.getfqdn()) + ':' + argv[1]
+    service_id = socket.getfqdn() + ':' + argv[1]
 
     server = grpc.server(futures.ThreadPoolExecutor())
 

@@ -29,7 +29,7 @@ def run():
             #de pares
             response = stub.mapping(center_pb2.MappingRequest(key = int(key)))
             if response.retval == '': continue
-            
+
             #se conecta ao servidor de pares com o string
             #identificador retornado pelo servidor centralizador
             #e realiza uma consulta enviando a mesma chave, recebendo o valor

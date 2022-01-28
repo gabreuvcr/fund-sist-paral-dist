@@ -57,7 +57,7 @@ class PeerServer(peer_pb2_grpc.PeerServerServicer):
 
 def serve():
     #string identificador de um serviço
-    service_id = socket.gethostbyname(socket.getfqdn()) + ':' + argv[1]
+    service_id = socket.getfqdn() + ':' + argv[1]
     flag = False
 
     if len(argv) > 2: flag = True #verifica se há dois ou mais argumentos
