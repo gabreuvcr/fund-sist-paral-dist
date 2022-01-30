@@ -28,7 +28,7 @@ class CenterServer(center_pb2_grpc.CenterServerServicer):
         #de serviço de um servidor de pares
         if request.key in self.dictionary:
             return center_pb2.StringReply(retval = self.dictionary[request.key])
-        #se nao existir a chave, retorna uma string vazia
+        #se nao existir a chave, retorna um string vazio
         return center_pb2.StringReply(retval= '')
 
     def end(self, request, context):
@@ -53,7 +53,7 @@ def serve():
 
     server.start()
     stop_event.wait()
-    server.stop(5)
+    server.stop(1)
 
 if __name__ == '__main__':
     try:

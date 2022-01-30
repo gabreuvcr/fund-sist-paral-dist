@@ -30,7 +30,7 @@ class PeerServer(peer_pb2_grpc.PeerServerServicer):
         if request.key in self.dictionary:
             return peer_pb2.StringReply(retval = self.dictionary[request.key])
         
-        #se nao existir, retorna uma string nula
+        #se nao existir, retorna um string vazio
         return peer_pb2.StringReply(retval = '')
     
     def active(self, request, context):
@@ -72,7 +72,7 @@ def serve():
 
     server.start()
     stop_event.wait()
-    server.stop(5)
+    server.stop(1)
 
 if __name__ == '__main__':
     try:
