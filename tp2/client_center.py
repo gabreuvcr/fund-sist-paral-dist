@@ -1,12 +1,21 @@
 from sys import argv
 
+import socket
 import grpc
 
 from protos import center_pb2, center_pb2_grpc, peer_pb2, peer_pb2_grpc
 
+def localhost_to_fqdn(service_id: str):
+    return service_id.replace("localhost", socket.getfqdn())
+
 def run():
     #string identificador de serviço
     service_id = argv[1]
+
+    #se o service_id passado como argumento for localhost,
+    #altera o localhost pelo fqdn
+    if service_id.startswith("localhost"):
+        service_id = localhost_to_fqdn(service_id)
 
     channel = grpc.insecure_channel(service_id)
 
@@ -28,7 +37,9 @@ def run():
             #se existir, receberá o string identificador de serviço de um servidor
             #de pares
             response = stub.mapping(center_pb2.MappingRequest(key = int(key)))
-            if response.retval == '': continue
+            if response.retval == '':
+                print('')
+                continue
 
             #se conecta ao servidor de pares com o string
             #identificador retornado pelo servidor centralizador
@@ -50,7 +61,6 @@ def run():
             break
 
     channel.close()
-
 
 if __name__ == '__main__':
     try:

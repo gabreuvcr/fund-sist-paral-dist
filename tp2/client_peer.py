@@ -1,12 +1,21 @@
 from sys import argv
 
+import socket
 import grpc
 
 from protos import peer_pb2, peer_pb2_grpc
 
+def localhost_to_fqdn(service_id):
+    return service_id.replace("localhost", socket.getfqdn())
+
 def run():
     #string identificador de um serviço
     service_id = argv[1]
+
+    #se o service_id passado como argumento for localhost,
+    #altera o localhost pelo fqdn
+    if service_id.startswith("localhost"):
+        service_id = localhost_to_fqdn(service_id)
 
     channel = grpc.insecure_channel(service_id)
 
@@ -47,6 +56,11 @@ def run():
             
             command, center_service_id = client_input.split(',')
 
+            #se o service_id passado como input for localhost,
+            #altera o localhost pelo fqdn
+            if (center_service_id.startswith("localhost")):
+                center_service_id = localhost_to_fqdn(center_service_id)
+
             #envia para o servidor de pares um string indentificador de serviço para
             #que registre suas chaves em um servidor centralizador, imprime o numero de chaves
             #registradas pelo servidor centralizador
@@ -62,7 +76,6 @@ def run():
             break
 
     channel.close()
-
 
 if __name__ == '__main__':
     try:
