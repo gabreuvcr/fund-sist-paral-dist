@@ -33,10 +33,13 @@ def run():
             command, key = client_input.split(',')
             
             #envia para o servidor centralizador a chave que deseja consultar,
-            #caso ela não exista, receberá um string vazio, voltando para o loop,
-            #se existir, receberá o string identificador de serviço de um servidor
-            #de pares
+            #caso ela não exista, receberá um string vazio, imprimindo uma
+            #nova linha vazia e voltando para o loop, se existir, receberá o 
+            #string identificador de serviço de um servidor de pares
             response = stub.mapping(center_pb2.MappingRequest(key = int(key)))
+            
+            #se o retorno for um string vazio, imprime uma nova linha vazia
+            #e segue para o proximo comando
             if response.retval == '':
                 print('')
                 continue

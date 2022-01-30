@@ -46,6 +46,7 @@ def run():
 
             #envia para o servidor de pares uma chave e recebe como retorno
             #o valor correspondente, que será impresso
+            #se o retorno for um string vazio, imprime apenas uma nova linha vazia
             response = stub.query(peer_pb2.QueryRequest(key = int(key)))
             print(response.retval)
 
